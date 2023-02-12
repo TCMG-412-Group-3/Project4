@@ -15,6 +15,8 @@ with open ( './http_access_log.txt', 'r') as data: #opens txt file
   status_3xx_counter = 0
   status_4xx_counter = 0
 
+  file_dict = {}  
+
   data_list.reverse() #sorts from most recent to oldest
   no_date_counter = 0
 
@@ -32,6 +34,13 @@ with open ( './http_access_log.txt', 'r') as data: #opens txt file
         status_4xx_counter += 1 # tallies 4 codes
       else:
         pass
+
+      n4 = re.split('"GET | HTTP', n2[5]) #file name counter
+      n4_2 = n4[1].split() #gets rid of extra stuff after the file extension
+      if n4_2[0] in file_dict:
+        file_dict[n4_2[0]] += 1
+      else:
+        file_dict[n4_2[0]] = 1
 
     except IndexError: #used to bypass requests without a date
       empty_dates.append(data_list[i]) #adds index of request without a date to list
@@ -55,9 +64,25 @@ with open ( './http_access_log.txt', 'r') as data: #opens txt file
 status_3xx_percent = (decimal.Decimal((status_3xx_counter/ttl_rq)*100)).quantize(decimal.Decimal('.01')) # calculates % and rounds to 2 decimal places
 status_4xx_percent = (decimal.Decimal((status_4xx_counter/ttl_rq)*100)).quantize(decimal.Decimal('.01'))
 
+file_max_count = 0
+file_min_list = []
+
+for i in file_dict:
+  if file_max_count < file_dict[i]: #compares the max count to current count, if more then replaced
+    file_max_count = file_dict[i]
+  elif file_dict[i] == 1: #checks if current count is = 1 to be added to least requested file list
+    file_min_list.append(i)
+  else:
+    pass
+
+file_max_name = list(file_dict.keys())[list(file_dict.values()).index(file_max_count)] #looks up key given value of dictionary
+with open('file_min_document.txt', 'w') as file_min_doc: #adds every 'least' requested file to a txt to prevent cluttering when ran
+  file_min_doc.write('\n'.join(file_min_list))
 
 print ('Total number of requests:', ttl_rq)
 print('number of requests within the past 6 months:', past_6months_counter)
 print('number of requests without a date:', no_date_counter)
 print('The number of 3xx status is:', status_3xx_counter, 'which is: %', status_3xx_percent) 
 print('The number of 4xx status is:', status_4xx_counter, 'which is: %', status_4xx_percent)
+print('The most requested file is', file_max_name, 'with', file_max_count, 'requests')
+print('The least requested files were output into file_min_document.txt with each request having 1 count')
