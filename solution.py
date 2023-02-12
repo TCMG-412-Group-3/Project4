@@ -1,6 +1,7 @@
 import urllib.request
 import re
 import datetime
+import decimal
 
 urllib.request.urlretrieve('https://s3.amazonaws.com/tcmg476/http_access_log', r"./http_access_log.txt") #downloads txt from http
 with open ( './http_access_log.txt', 'r') as data: #opens txt file
@@ -9,15 +10,29 @@ with open ( './http_access_log.txt', 'r') as data: #opens txt file
   ttl_rq = len(data_list) #counts total indexes to obtain total number of requests
   
   date_list = []
+  empty_dates = []
+
+  status_3xx_counter = 0
+  status_4xx_counter = 0
+
   data_list.reverse() #sorts from most recent to oldest
   no_date_counter = 0
 
-  empty_dates = []
   for i in range(ttl_rq): #obtain dates from entire list
     try:
       n = str(data_list[i]) #turns list element into a string to split
       n2 = re.split('\[|\]|\:', n) #splits at brackets and colons so there is only date
       date_list.append(n2[1].split(r'/')) #makes each part of date into an element of its own list, added to master list named date_list
+
+      n3 = re.split('\"', n2[5]) 
+      status_temp_str = str(n3[2]).strip() # obtains only status code from regex split. strips to get rid of whitespace
+      if status_temp_str.startswith('3'): # looks for status code to start with 3
+        status_3xx_counter += 1 # tallies 3 codes
+      elif status_temp_str.startswith('4'): # looks for status code to start with 4
+        status_4xx_counter += 1 # tallies 4 codes
+      else:
+        pass
+
     except IndexError: #used to bypass requests without a date
       empty_dates.append(data_list[i]) #adds index of request without a date to list
       no_date_counter += 1 #tallies number of requests without a date
@@ -28,21 +43,21 @@ with open ( './http_access_log.txt', 'r') as data: #opens txt file
   comparison = date_list[0] #most recent entry used to compare to previous number of months
   current_date = datetime.date(int(comparison[2]), months_dict[comparison[1]], int(comparison[0])) #turns the most recent date into format useable by datetime module
 
-  counter = 0
+  past_6months_counter = 0
   for i in range(len(date_list)): #for loop to compare each entry to the most recent entry
     temp_date = datetime.date(int(date_list[i][2]), months_dict[date_list[i][1]],int(date_list[i][0])) #converts each date entry into a datetime format
     difference = current_date - temp_date #calculates difference of datetimes
     if difference.days <= 180: #conditional to determine if datetime difference is 180 days
-      counter += 1 #adds to the number of requests within a 6 month period
+      past_6months_counter += 1 #adds to the number of requests within a 6 month period
     else: #stops the for loop once it reaches 6 months to prevent further parsing
       break
     
+status_3xx_percent = (decimal.Decimal((status_3xx_counter/ttl_rq)*100)).quantize(decimal.Decimal('.01')) # calculates % and rounds to 2 decimal places
+status_4xx_percent = (decimal.Decimal((status_4xx_counter/ttl_rq)*100)).quantize(decimal.Decimal('.01'))
 
-# print ('the most recent date is', comparison)
-# print(" ")
-# print ('The most recent entry is:', data_list[0])
-# print(' The oldest entry is:', data_list[-1])
 
 print ('Total number of requests:', ttl_rq)
-print('number of requests within the past 6 months:', counter)
+print('number of requests within the past 6 months:', past_6months_counter)
 print('number of requests without a date:', no_date_counter)
+print('The number of 3xx status is:', status_3xx_counter, 'which is: %', status_3xx_percent) 
+print('The number of 4xx status is:', status_4xx_counter, 'which is: %', status_4xx_percent)
