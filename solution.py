@@ -25,7 +25,7 @@ with open ( './http_access_log.txt', 'r') as data: #opens txt file
       n = str(data_list[i]) #turns list element into a string to split
       n2 = re.split('\[|\]|\:', n) #splits at brackets and colons so there is only date
       date_list.append(n2[1].split(r'/')) #makes each part of date into an element of its own list, added to master list named date_list
-
+##
       n3 = re.split('\"', n2[5]) 
       status_temp_str = str(n3[2]).strip() # obtains only status code from regex split. strips to get rid of whitespace
       if status_temp_str.startswith('3'): # looks for status code to start with 3
@@ -34,14 +34,14 @@ with open ( './http_access_log.txt', 'r') as data: #opens txt file
         status_4xx_counter += 1 # tallies 4 codes
       else:
         pass
-
+##
       n4 = re.split('"GET | HTTP', n2[5]) #file name counter
       n4_2 = n4[1].split() #gets rid of extra stuff after the file extension
       if n4_2[0] in file_dict:
         file_dict[n4_2[0]] += 1
       else:
         file_dict[n4_2[0]] = 1
-
+##
     except IndexError: #used to bypass requests without a date
       empty_dates.append(data_list[i]) #adds index of request without a date to list
       no_date_counter += 1 #tallies number of requests without a date
@@ -60,10 +60,13 @@ with open ( './http_access_log.txt', 'r') as data: #opens txt file
       past_6months_counter += 1 #adds to the number of requests within a 6 month period
     else: #stops the for loop once it reaches 6 months to prevent further parsing
       break
-    
+
+##    
 status_3xx_percent = (decimal.Decimal((status_3xx_counter/ttl_rq)*100)).quantize(decimal.Decimal('.01')) # calculates % and rounds to 2 decimal places
 status_4xx_percent = (decimal.Decimal((status_4xx_counter/ttl_rq)*100)).quantize(decimal.Decimal('.01'))
+##
 
+##
 file_max_count = 0
 file_min_list = []
 
@@ -74,10 +77,31 @@ for i in file_dict:
     file_min_list.append(i)
   else:
     pass
+##
 
 file_max_name = list(file_dict.keys())[list(file_dict.values()).index(file_max_count)] #looks up key given value of dictionary
 with open('file_min_document.txt', 'w') as file_min_doc: #adds every 'least' requested file to a txt to prevent cluttering when ran
   file_min_doc.write('\n'.join(file_min_list))
+
+##
+for i in range(ttl_rq): #creates a [month]_log.txt file for requests each month
+  index_content = data_list[i] #finds the request content
+  if any(z in index_content for z in months_dict.keys()): #checks if request cotent has month, else it makes IndexError
+    month_checker = re.split("\/", index_content) #retrieves month from request
+    with open(month_checker[1]+'_log.txt', 'a') as month_file: #appends request to the respective file
+        month_file.write(index_content+'\n')
+  else: #request does not have a month in it
+    previous_request_index = i 
+    while True:
+      previous_request_index -= 1 #search continuously through previous requests
+      previous_req = data_list[previous_request_index] # ^
+      month_checker = re.split("\/", previous_req) 
+      if any(z in previous_req for z in months_dict.keys()): #finds most related request with a month
+        with open(month_checker[1]+'_log.txt', 'a') as month_file: #places the current request into month file of that closest request with proper date
+          month_file.write(index_content+'\n')
+          break
+      else: continue #restarts loop to continue finding previous request
+##
 
 print ('Total number of requests:', ttl_rq)
 print('number of requests within the past 6 months:', past_6months_counter)
