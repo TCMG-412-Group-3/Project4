@@ -106,7 +106,10 @@ for i in range(ttl_rq): #creates a [month]_log.txt file for requests each month
 print ('Total number of requests:', ttl_rq)
 print('number of requests within the past 6 months:', past_6months_counter)
 print('number of requests without a date:', no_date_counter)
-print('The number of 3xx status is:', status_3xx_counter, 'which is: %', status_3xx_percent) 
-print('The number of 4xx status is:', status_4xx_counter, 'which is: %', status_4xx_percent)
+# print('Number of requests made on', date, ' is: ', function) ideally (i think), the print statement is within the looped function and 
+# it will print the number of requests for each date as we iterate through the log file, right? im not too sure actually
+# same concept with #2 printing requests made each week and each mont 
+print('The number of 3xx status (redirected requests) is:', status_3xx_counter, 'which is: %', status_3xx_percent) 
+print('The number of 4xx status (unsuccessful requests) is:', status_4xx_counter, 'which is: %', status_4xx_percent)
 print('The most requested file is', file_max_name, 'with', file_max_count, 'requests')
 print('The least requested files were output into file_min_document.txt with each request having 1 count')
