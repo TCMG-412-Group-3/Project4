@@ -103,13 +103,87 @@ for i in range(ttl_rq): #creates a [month]_log.txt file for requests each month
       else: continue #restarts loop to continue finding previous request
 ##
 
+#Find requests made on each day
+#store dictionary of dates and number of requests
+date_list.reverse()
+day_dict = {}
+current_date = datetime.date(int(date_list[0][2]), months_dict[date_list[0][1]],int(date_list[0][0]))
+day_dict[str(current_date)] = 1
+date_to_collect = current_date
+
+#iterate through each date in the list
+for i in range(len(date_list)):
+  current_date = datetime.date(int(date_list[i][2]), months_dict[date_list[i][1]],int(date_list[i][0]))
+  #if we get to a new date, set the current_date to the new date
+  if (current_date != date_to_collect):
+    date_to_collect = current_date
+    #add date to dictionary
+    if str(date_to_collect) not in day_dict:
+      day_dict[str(date_to_collect)] = 1
+    continue
+  else:
+    day_dict[str(date_to_collect)] += 1
+
+
+
+#find how many requests were made per week
+
+week_count = 0 
+week_dict = {}
+current_date = datetime.date(int(date_list[0][2]), months_dict[date_list[0][1]],int(date_list[0][0]))
+date_to_collect = current_date
+week_dict[week_count] = 1
+for i in range(len(date_list)):
+  current_date = datetime.date(int(date_list[i][2]), months_dict[date_list[i][1]],int(date_list[i][0]))
+  #if we hit a week (7) days, increment the week count
+  if ((current_date - datetime.timedelta(days=7)) == date_to_collect):
+    week_count += 1
+    date_to_collect = current_date
+    #add date to dictionary
+    if week_count not in week_dict:
+      week_dict[week_count] = 1
+    continue
+  else:
+    week_dict[week_count] += 1
+
+
+
+#find requests made per month
+
+month_year_dict = {}
+current_month_year = date_list[0][1] + ' ' + date_list[0][2]
+month_date_to_collect = current_month_year
+month_year_dict[current_month_year] = 1
+for i in range(len(date_list)):
+  current_month_year = date_list[i][1] + ' ' + date_list[i][2]
+  #if we hit a new month, set the current_month_year to the new month, and craete a new entry in the dictionary if it doesn't exist
+  if (current_month_year != month_date_to_collect):
+    month_date_to_collect = current_month_year
+    #add date to dictionary
+    if month_date_to_collect not in month_year_dict:
+      month_year_dict[month_date_to_collect] = 1
+    continue
+  else:
+    month_year_dict[month_date_to_collect] += 1
+
+print('-'*50)
 print ('Total number of requests:', ttl_rq)
 print('number of requests within the past 6 months:', past_6months_counter)
 print('number of requests without a date:', no_date_counter)
-# print('Number of requests made on', date, ' is: ', function) ideally (i think), the print statement is within the looped function and 
-# it will print the number of requests for each date as we iterate through the log file, right? im not too sure actually
-# same concept with #2 printing requests made each week and each mont 
-print('The number of 3xx status (redirected requests) is:', status_3xx_counter, 'which is: %', status_3xx_percent) 
-print('The number of 4xx status (unsuccessful requests) is:', status_4xx_counter, 'which is: %', status_4xx_percent)
+print('-'*50)
+print('number of requests made on each day:')
+for i in day_dict:
+  print('Date:', i, 'Number of requests:', day_dict[i])
+print('-'*50)
+print('number of requests made per week:')
+for i in week_dict:
+  print('Week:', i+1, 'Number of requests:', week_dict[i])
+print('-'*50)
+print('number of requests made per month:')
+for i in month_year_dict:
+  print('Month:', i, 'Number of requests:', month_year_dict[i])
+print('-'*50)
+print('The number of 3xx status is:', status_3xx_counter, 'which is: %', status_3xx_percent) 
+print('The number of 4xx status is:', status_4xx_counter, 'which is: %', status_4xx_percent)
 print('The most requested file is', file_max_name, 'with', file_max_count, 'requests')
 print('The least requested files were output into file_min_document.txt with each request having 1 count')
